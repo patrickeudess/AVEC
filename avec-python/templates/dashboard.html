@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord - AVEC{% endblock %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<!-- Statistiques principales -->
+<div class="row mb-4">
+    {% if current_user.role == 'admin' %}
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Organisations
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_organizations }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-building fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Cycles Actifs
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_cycles }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-calendar-event fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Groupes
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_groups }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Transactions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_transactions }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-cash-coin fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actions rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('cycles.create') }}" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle"></i> Nouveau cycle
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('groups.create') }}" class="btn btn-success w-100">
+                            <i class="bi bi-people-fill"></i> Nouveau groupe
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('transactions.create') }}" class="btn btn-info w-100">
+                            <i class="bi bi-cash"></i> Nouvelle transaction
+                        </a>
+                    </div>
+                    {% if current_user.role == 'admin' %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('organizations.create') }}" class="btn btn-warning w-100">
+                            <i class="bi bi-building-add"></i> Nouvelle organisation
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cycles récents -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Cycles récents</h5>
+                <a href="{{ url_for('cycles.index') }}" class="btn btn-outline-primary btn-sm">
+                    Voir tous
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_cycles %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Statut</th>
+                                <th>Progression</th>
+                                <th>Groupes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cycle in recent_cycles %}
+                            <tr>
+                                <td>
+                                    <strong>{{ cycle.name }}</strong>
+                                    {% if cycle.description %}
+                                    <br><small class="text-muted">{{ cycle.description[:50] }}{% if cycle.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if cycle.status == 'active' else 'secondary' if cycle.status == 'completed' else 'warning' }}">
+                                        {{ cycle.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ cycle.get_progress_percentage() }}%"
+                                             aria-valuenow="{{ cycle.get_progress_percentage() }}" 
+                                             aria-valuemin="0" aria-valuemax="100">
+                                            {{ "%.1f"|format(cycle.get_progress_percentage()) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ cycle.groups.count() }}</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('cycles.show', id=cycle.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('cycles.edit', id=cycle.id) }}" class="btn btn-outline-secondary btn-sm">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar-x display-4 text-muted"></i>
+                    <h5 class="mt-3">Aucun cycle</h5>
+                    <p class="text-muted">Aucun cycle n'a été créé pour le moment.</p>
+                    <a href="{{ url_for('cycles.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Créer le premier cycle
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

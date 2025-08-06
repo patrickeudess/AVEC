@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} - AVEC{% endblock %}
+
+{% block page_title %}{{ group.name }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    {% if current_user.role in ['admin', 'animateur'] or group.created_by == current_user.id %}
+    <a href="{{ url_for('groups.edit', id=group.id) }}" class="btn btn-warning">
+        <i class="bi bi-pencil"></i> Modifier
+    </a>
+    <a href="{{ url_for('groups.add_member', id=group.id) }}" class="btn btn-success">
+        <i class="bi bi-person-plus"></i> Ajouter membre
+    </a>
+    {% endif %}
+    <a href="{{ url_for('groups.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- Informations du groupe -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Informations du groupe</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Nom :</strong> {{ group.name }}</p>
+                        <p><strong>Cycle :</strong> 
+                            <a href="{{ url_for('cycles.show', id=group.cycle.id) }}" class="text-decoration-none">
+                                {{ group.cycle.name }}
+                            </a>
+                        </p>
+                        <p><strong>Statut :</strong> 
+                            <span class="badge bg-{{ 'success' if group.status == 'active' else 'secondary' if group.status == 'inactive' else 'warning' if group.status == 'full' else 'danger' }}">
+                                {{ group.status|title }}
+                            </span>
+                        </p>
+                        <p><strong>Membres :</strong> {{ group.current_members }}/{{ group.max_members }}</p>
+                        <div class="progress mb-3">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ (group.current_members / group.max_members) * 100 }}%"
+                                 aria-valuenow="{{ (group.current_members / group.max_members) * 100 }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ "%.1f"|format((group.current_members / group.max_members) * 100) }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Village :</strong> {{ group.village }}</p>
+                        <p><strong>Valeur d'une part :</strong> {{ "%.0f"|format(group.share_value) }} FCFA</p>
+                        <p><strong>Montant de contribution :</strong> {{ "%.0f"|format(group.contribution_amount) }} FCFA</p>
+                        <p><strong>Total épargnes :</strong> <span class="text-success">{{ "%.0f"|format(group.total_savings) }} FCFA</span></p>
+                        <p><strong>Total prêts :</strong> <span class="text-warning">{{ "%.0f"|format(group.total_loans) }} FCFA</span></p>
+                        <p><strong>Caisse de solidarité :</strong> <span class="text-info">{{ "%.0f"|format(group.solidarity_fund) }} FCFA</span></p>
+                        {% if group.meeting_location %}
+                        <p><strong>Lieu de réunion :</strong> {{ group.meeting_location }}</p>
+                        {% endif %}
+                        {% if group.meeting_time %}
+                        <p><strong>Heure de réunion :</strong> {{ group.meeting_time }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if group.description %}
+                <hr>
+                <h6>Description</h6>
+                <p>{{ group.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Membres du groupe -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Membres ({{ group.members|length }})</h5>
+                {% if group.can_accept_members() and current_user.role in ['admin', 'animateur'] or group.created_by == current_user.id %}
+                <a href="{{ url_for('groups.add_member', id=group.id) }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-person-plus"></i> Ajouter membre
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if group.members %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Rôle</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in group.members %}
+                            <tr>
+                                <td>
+                                    <strong>{{ member.get_full_name() }}</strong>
+                                </td>
+                                <td>
+                                    <small>{{ member.email }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ member.phone or 'Non renseigné' }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'primary' if member.role == 'admin' else 'info' if member.role == 'supervisor' else 'success' if member.role == 'animator' else 'secondary' }}">
+                                        {{ member.role|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if current_user.role in ['admin', 'supervisor', 'animator'] and member != current_user %}
+                                    <form method="POST" action="{{ url_for('groups.remove_member', id=group.id, user_id=member.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('Retirer {{ member.get_full_name() }} du groupe ?')">
+                                            <i class="bi bi-person-x"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-people fa-3x text-muted"></i>
+                    <h5 class="text-muted mt-3">Aucun membre</h5>
+                    <p class="text-muted">Commencez par ajouter des membres au groupe.</p>
+                    <a href="{{ url_for('groups.add_member', id=group.id) }}" class="btn btn-primary">
+                        <i class="bi bi-person-plus"></i> Ajouter un membre
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Transactions récentes -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Transactions récentes</h5>
+                <a href="{{ url_for('transactions.create') }}?group_id={{ group.id }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Nouvelle transaction
+                </a>
+            </div>
+            <div class="card-body">
+                {% if transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Montant</th>
+                                <th>Utilisateur</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if transaction.type == 'savings' else 'warning' if transaction.type == 'loan' else 'info' if transaction.type == 'repayment' else 'secondary' }}">
+                                        {{ transaction.type|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong class="text-{{ 'success' if transaction.type == 'savings' else 'warning' if transaction.type == 'loan' else 'info' }}">
+                                        {{ "%.0f"|format(transaction.amount) }} FCFA
+                                    </strong>
+                                </td>
+                                <td>
+                                    <small>{{ transaction.user.get_full_name() }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if transaction.status == 'pending' else 'success' if transaction.status == 'approved' else 'danger' if transaction.status == 'rejected' else 'info' if transaction.status == 'completed' else 'secondary' }}">
+                                        {{ transaction.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ transaction.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('transactions.show', id=transaction.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('transactions.index') }}?group_id={{ group.id }}" class="btn btn-outline-primary">
+                        Voir toutes les transactions
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-cash-coin fa-3x text-muted"></i>
+                    <h5 class="text-muted mt-3">Aucune transaction</h5>
+                    <p class="text-muted">Commencez par créer une transaction pour ce groupe.</p>
+                    <a href="{{ url_for('transactions.create') }}?group_id={{ group.id }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Créer une transaction
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Statistiques -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Statistiques</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-primary">{{ group.members|length }}</h4>
+                        <small class="text-muted">Membres</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-success">{{ group.transactions|selectattr('status', 'equalto', 'completed')|list|length }}</h4>
+                        <small class="text-muted">Transactions</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-success">{{ "%.0f"|format(group.total_savings) }} FCFA</h4>
+                        <small class="text-muted">Épargnes</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-warning">{{ "%.0f"|format(group.total_loans) }} FCFA</h4>
+                        <small class="text-muted">Prêts</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actions rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if group.can_accept_members() and current_user.role in ['admin', 'animateur'] or group.created_by == current_user.id %}
+                    <a href="{{ url_for('groups.add_member', id=group.id) }}" class="btn btn-primary">
+                        <i class="bi bi-person-plus"></i> Ajouter membre
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('transactions.create') }}?group_id={{ group.id }}" class="btn btn-success">
+                        <i class="bi bi-cash-stack"></i> Nouvelle transaction
+                    </a>
+                    <a href="{{ url_for('transactions.stats') }}?group_id={{ group.id }}" class="btn btn-info">
+                        <i class="bi bi-graph-up"></i> Statistiques
+                    </a>
+                    {% if current_user in group.members %}
+                    <a href="{{ url_for('avec.member_account_book', user_id=current_user.id) }}" class="btn btn-warning">
+                        <i class="bi bi-journal-text"></i> Mon Carnet
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

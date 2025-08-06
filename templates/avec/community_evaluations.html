@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Évaluations de Communautés - AVEC{% endblock %}
+
+{% block page_title %}Évaluations de Communautés{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('avec.community_evaluation') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Nouvelle Évaluation
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-list-ul"></i> Liste des Évaluations
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if evaluations %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Village</th>
+                                <th>Population</th>
+                                <th>Intérêt Communauté</th>
+                                <th>Date d'évaluation</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for evaluation in evaluations %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                            <i class="bi bi-building text-white"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ evaluation.village_name }}</div>
+                                            <small class="text-muted">{{ evaluation.main_activities[:50] }}{% if evaluation.main_activities|length > 50 %}...{% endif %}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if evaluation.population %}
+                                        <span class="badge bg-info">{{ evaluation.population }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Non spécifié</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if evaluation.community_interest %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Intéressé
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-question-circle"></i> À évaluer
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ evaluation.evaluation_date.strftime('%d/%m/%Y') }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#evaluationModal{{ evaluation.id }}"
+                                                title="Voir détails">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <a href="#" class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Modal pour les détails -->
+                            <div class="modal fade" id="evaluationModal{{ evaluation.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Détails de l'évaluation - {{ evaluation.village_name }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6>Informations générales</h6>
+                                                    <p><strong>Village:</strong> {{ evaluation.village_name }}</p>
+                                                    <p><strong>Population:</strong> {{ evaluation.population or 'Non spécifié' }}</p>
+                                                    <p><strong>Intérêt communautaire:</strong> 
+                                                        {% if evaluation.community_interest %}
+                                                            <span class="badge bg-success">Oui</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning">Non</span>
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Activités principales</h6>
+                                                    <p>{{ evaluation.main_activities or 'Non spécifié' }}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <hr>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6>Groupes existants</h6>
+                                                    <p>{{ evaluation.existing_groups or 'Aucun groupe existant mentionné' }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Évaluation des besoins</h6>
+                                                    <p>{{ evaluation.needs_assessment or 'Non spécifié' }}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <hr>
+                                            
+                                            <div class="text-muted">
+                                                <small>Évalué le {{ evaluation.evaluation_date.strftime('%d/%m/%Y à %H:%M') }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                            <a href="#" class="btn btn-primary">Créer un groupe AVEC</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-building fa-3x text-muted"></i>
+                    <h5 class="text-muted mt-3">Aucune évaluation</h5>
+                    <p class="text-muted">Aucune évaluation de communauté n'a été effectuée pour le moment.</p>
+                    <a href="{{ url_for('avec.community_evaluation') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Effectuer une évaluation
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

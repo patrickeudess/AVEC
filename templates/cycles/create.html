@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Créer un cycle - AVEC{% endblock %}
+
+{% block page_title %}Créer un cycle{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('cycles.index') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Nouveau cycle d'épargne</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Nom du cycle *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="start_date" class="form-label">Date de début *</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="Description du cycle d'épargne..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="end_date" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="target_amount" class="form-label">Montant cible</label>
+                            <input type="number" class="form-control" id="target_amount" name="target_amount" 
+                                   step="0.01" min="0" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="interest_rate" class="form-label">Taux d'intérêt (%)</label>
+                            <input type="number" class="form-control" id="interest_rate" name="interest_rate" 
+                                   step="0.01" min="0" max="100" placeholder="0.00">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_frequency" class="form-label">Fréquence des réunions</label>
+                            <select class="form-select" id="meeting_frequency" name="meeting_frequency">
+                                <option value="weekly">Hebdomadaire</option>
+                                <option value="biweekly">Bi-hebdomadaire</option>
+                                <option value="monthly">Mensuelle</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_day" class="form-label">Jour de réunion</label>
+                            <select class="form-select" id="meeting_day" name="meeting_day">
+                                <option value="">Sélectionner un jour</option>
+                                <option value="monday">Lundi</option>
+                                <option value="tuesday">Mardi</option>
+                                <option value="wednesday">Mercredi</option>
+                                <option value="thursday">Jeudi</option>
+                                <option value="friday">Vendredi</option>
+                                <option value="saturday">Samedi</option>
+                                <option value="sunday">Dimanche</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('cycles.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Créer le cycle
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Organisations - AVEC{% endblock %}
+
+{% block page_title %}Organisations{% endblock %}
+
+{% block page_actions %}
+{% if current_user.role == 'admin' %}
+<a href="{{ url_for('organizations.create') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Créer une organisation
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for organization in organizations %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ organization.name }}</h5>
+                {% if organization.description %}
+                <p class="card-text text-muted">{{ organization.description[:100] }}{% if organization.description|length > 100 %}...{% endif %}</p>
+                {% endif %}
+                
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <h6 class="text-primary">{{ organization.cycles.count() }}</h6>
+                        <small class="text-muted">Cycles</small>
+                    </div>
+                    <div class="col-4">
+                        <h6 class="text-success">{{ organization.get_total_groups() }}</h6>
+                        <small class="text-muted">Groupes</small>
+                    </div>
+                    <div class="col-4">
+                        <h6 class="text-info">{{ organization.get_total_members() }}</h6>
+                        <small class="text-muted">Membres</small>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h6 class="text-success">{{ "%.0f"|format(organization.get_total_savings()) }} FCFA</h6>
+                        <small class="text-muted">Épargnes</small>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-warning">{{ "%.0f"|format(organization.get_total_loans()) }} FCFA</h6>
+                        <small class="text-muted">Prêts</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <a href="{{ url_for('organizations.show', id=organization.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye"></i> Voir
+                    </a>
+                    <a href="{{ url_for('organizations.edit', id=organization.id) }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                    <a href="{{ url_for('organizations.reports', id=organization.id) }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-graph-up"></i> Rapports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="bi bi-building display-1 text-muted"></i>
+            <h3 class="mt-3">Aucune organisation</h3>
+            <p class="text-muted">Aucune organisation n'a été créée pour le moment.</p>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('organizations.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Créer la première organisation
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

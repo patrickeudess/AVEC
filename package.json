@@ -1,0 +1,41 @@
+{
+  "name": "avec",
+  "version": "1.0.0",
+  "description": "AVEC - Appui à la Vulnérabilité et l'Épargne Collective. Plateforme complète pour la gestion des groupes d'épargne et de crédit communautaires.",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:mobile": "cd mobile && npm start",
+    "dev:web": "cd web && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../mobile && npm install && cd ../web && npm install",
+    "build:backend": "cd backend && npm run build",
+    "build:mobile": "cd mobile && npm run build:android",
+    "build:web": "cd web && npm run build",
+    "test:backend": "cd backend && npm test",
+    "test:web": "cd web && npm test",
+    "start:backend": "cd backend && npm start",
+    "start:web": "cd web && npm start"
+  },
+  "keywords": [
+    "avec",
+    "epargne",
+    "collective",
+    "microfinance",
+    "nodejs",
+    "react",
+    "react-native",
+    "express",
+    "postgresql",
+    "sequelize"
+  ],
+  "author": "AVEC Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/avec-team/avec-platform.git"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

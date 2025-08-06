@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Statistiques - AVEC{% endblock %}
+
+{% block page_title %}Statistiques des transactions{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="period" class="form-label">Période</label>
+                <select class="form-select" id="period" name="period">
+                    <option value="week" {% if period == 'week' %}selected{% endif %}>Cette semaine</option>
+                    <option value="month" {% if period == 'month' %}selected{% endif %}>Ce mois</option>
+                    <option value="year" {% if period == 'year' %}selected{% endif %}>Cette année</option>
+                    <option value="custom" {% if period == 'custom' %}selected{% endif %}>30 derniers jours</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="group_id" class="form-label">Groupe</label>
+                <select class="form-select" id="group_id" name="group_id">
+                    <option value="">Tous les groupes</option>
+                    {% for group in groups %}
+                    <option value="{{ group.id }}" {% if request.args.get('group_id')|int == group.id %}selected{% endif %}>
+                        {{ group.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Statistiques générales -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total transactions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_transactions }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-cash-coin fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total épargnes
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.0f"|format(stats.total_savings) }} FCFA</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-piggy-bank fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total prêts
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.0f"|format(stats.total_loans) }} FCFA</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-bank fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Montant moyen
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.0f"|format(stats.average_amount) }} FCFA</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-graph-up fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques et détails -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Répartition par type</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Épargnes</h6>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ (stats.total_savings / (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest)) * 100 if (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest) > 0 else 0 }}%">
+                                {{ "%.1f"|format((stats.total_savings / (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest)) * 100 if (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest) > 0 else 0) }}%
+                            </div>
+                        </div>
+                        <p class="text-muted">{{ "%.0f"|format(stats.total_savings) }} FCFA</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Prêts</h6>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: {{ (stats.total_loans / (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest)) * 100 if (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest) > 0 else 0 }}%">
+                                {{ "%.1f"|format((stats.total_loans / (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest)) * 100 if (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest) > 0 else 0) }}%
+                            </div>
+                        </div>
+                        <p class="text-muted">{{ "%.0f"|format(stats.total_loans) }} FCFA</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Remboursements</h6>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                 style="width: {{ (stats.total_repayments / (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest)) * 100 if (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest) > 0 else 0 }}%">
+                                {{ "%.1f"|format((stats.total_repayments / (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest)) * 100 if (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest) > 0 else 0) }}%
+                            </div>
+                        </div>
+                        <p class="text-muted">{{ "%.0f"|format(stats.total_repayments) }} FCFA</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Intérêts</h6>
+                        <div class="progress mb-3">
+                            <div class="progress-bar bg-secondary" role="progressbar" 
+                                 style="width: {{ (stats.total_interest / (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest)) * 100 if (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest) > 0 else 0 }}%">
+                                {{ "%.1f"|format((stats.total_interest / (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest)) * 100 if (stats.total_savings + stats.total_loans + stats.total_repayments + stats.total_interest) > 0 else 0) }}%
+                            </div>
+                        </div>
+                        <p class="text-muted">{{ "%.0f"|format(stats.total_interest) }} FCFA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Informations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-success">{{ "%.0f"|format(stats.total_savings) }} FCFA</h4>
+                        <small class="text-muted">Épargnes</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-warning">{{ "%.0f"|format(stats.total_loans) }} FCFA</h4>
+                        <small class="text-muted">Prêts</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-info">{{ "%.0f"|format(stats.total_repayments) }} FCFA</h4>
+                        <small class="text-muted">Remboursements</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-secondary">{{ "%.0f"|format(stats.total_interest) }} FCFA</h4>
+                        <small class="text-muted">Intérêts</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <h6>Période analysée</h6>
+                    <p class="text-muted">
+                        {% if period == 'week' %}
+                        Cette semaine
+                        {% elif period == 'month' %}
+                        Ce mois
+                        {% elif period == 'year' %}
+                        Cette année
+                        {% else %}
+                        30 derniers jours
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('transactions.create') }}" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle"></i> Nouvelle transaction
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-list"></i> Voir toutes les transactions
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('groups.index') }}" class="btn btn-outline-success w-100">
+                            <i class="bi bi-people"></i> Voir les groupes
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('cycles.index') }}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-calendar"></i> Voir les cycles
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

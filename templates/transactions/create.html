@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle transaction - AVEC{% endblock %}
+
+{% block page_title %}Nouvelle transaction{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Nouvelle transaction AVEC</h5>
+                <small class="text-muted">Enregistrer une transaction d'épargne ou de prêt</small>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="type" class="form-label">Type de transaction *</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Sélectionner un type...</option>
+                                <option value="shares_purchase">Achat de parts</option>
+                                <option value="loan">Demande de prêt</option>
+                                <option value="loan_repayment">Remboursement de prêt</option>
+                                <option value="solidarity">Contribution solidarité</option>
+                                <option value="interest">Paiement d'intérêts</option>
+                            </select>
+                            <small class="text-muted">Type de transaction AVEC</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">Montant (FCFA) *</label>
+                            <input type="number" class="form-control" id="amount" name="amount"
+                                   step="100" min="100" placeholder="1000" required>
+                            <small class="text-muted">Montant en FCFA</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Description de la transaction..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="group_id" class="form-label">Groupe *</label>
+                            <select class="form-select" id="group_id" name="group_id" required>
+                                <option value="">Sélectionner un groupe...</option>
+                                {% for group in groups %}
+                                <option value="{{ group.id }}" 
+                                        {% if request.args.get('group_id')|int == group.id %}selected{% endif %}>
+                                    {{ group.name }} ({{ group.cycle.name }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="due_date" class="form-label">Date d'échéance</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="interest_rate" class="form-label">Taux d'intérêt (%)</label>
+                            <input type="number" class="form-control" id="interest_rate" name="interest_rate"
+                                   step="0.01" min="0" max="100" placeholder="0.00">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="loan_term" class="form-label">Durée du prêt (mois)</label>
+                            <input type="number" class="form-control" id="loan_term" name="loan_term"
+                                   min="1" max="60" placeholder="12">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Rappel AVEC :</strong> Toutes les transactions doivent être effectuées en présence de tous les membres du groupe pour assurer la transparence.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Créer la transaction
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Afficher/masquer les champs selon le type de transaction
+document.getElementById('type').addEventListener('change', function() {
+    const type = this.value;
+    const interestRateField = document.getElementById('interest_rate');
+    const loanTermField = document.getElementById('loan_term');
+    const dueDateField = document.getElementById('due_date');
+    
+    // Réinitialiser les champs
+    interestRateField.value = '';
+    loanTermField.value = '';
+    dueDateField.value = '';
+    
+    if (type === 'loan') {
+        // Pour les prêts, afficher tous les champs
+        interestRateField.parentElement.style.display = 'block';
+        loanTermField.parentElement.style.display = 'block';
+        dueDateField.parentElement.style.display = 'block';
+    } else if (type === 'repayment') {
+        // Pour les remboursements, masquer certains champs
+        interestRateField.parentElement.style.display = 'none';
+        loanTermField.parentElement.style.display = 'none';
+        dueDateField.parentElement.style.display = 'block';
+    } else {
+        // Pour les autres types, masquer les champs spécifiques aux prêts
+        interestRateField.parentElement.style.display = 'none';
+        loanTermField.parentElement.style.display = 'none';
+        dueDateField.parentElement.style.display = 'none';
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier {{ group.name }} - AVEC{% endblock %}
+
+{% block page_title %}Modifier {{ group.name }}{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('groups.show', id=group.id) }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Modifier le groupe</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Nom du groupe *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ group.name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="max_members" class="form-label">Nombre max de membres</label>
+                            <input type="number" class="form-control" id="max_members" name="max_members"
+                                   min="1" max="50" value="{{ group.max_members }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Description du groupe...">{{ group.description or '' }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="contribution_amount" class="form-label">Montant de contribution</label>
+                            <input type="number" class="form-control" id="contribution_amount" name="contribution_amount"
+                                   step="0.01" min="0" placeholder="0.00" value="{{ group.contribution_amount }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Statut</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="active" {% if group.status == 'active' %}selected{% endif %}>Actif</option>
+                                <option value="inactive" {% if group.status == 'inactive' %}selected{% endif %}>Inactif</option>
+                                <option value="full" {% if group.status == 'full' %}selected{% endif %}>Complet</option>
+                                <option value="closed" {% if group.status == 'closed' %}selected{% endif %}>Fermé</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_location" class="form-label">Lieu de réunion</label>
+                            <input type="text" class="form-control" id="meeting_location" name="meeting_location"
+                                   placeholder="Adresse ou lieu de réunion" value="{{ group.meeting_location or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_time" class="form-label">Heure de réunion</label>
+                            <input type="time" class="form-control" id="meeting_time" name="meeting_time"
+                                   value="{{ group.meeting_time or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('groups.show', id=group.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

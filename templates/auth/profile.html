@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Profil - AVEC{% endblock %}
+
+{% block page_title %}Mon profil{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Informations personnelles</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" class="form-control" value="{{ current_user.first_name }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-control" value="{{ current_user.last_name }}" readonly>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Téléphone</label>
+                        <input type="tel" class="form-control" value="{{ current_user.phone or 'Non renseigné' }}" readonly>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Rôle</label>
+                        <input type="text" class="form-control" value="{{ current_user.role|title }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Statut</label>
+                        <span class="badge bg-{{ 'success' if current_user.status == 'active' else 'danger' }}">
+                            {{ current_user.status|title }}
+                        </span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Village</label>
+                        <input type="text" class="form-control" value="{{ current_user.village or 'Non renseigné' }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Niveau d'alphabétisation</label>
+                        <input type="text" class="form-control" value="{{ current_user.literacy_level|title }}" readonly>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Dernière connexion</label>
+                        <input type="text" class="form-control" 
+                               value="{{ current_user.last_login.strftime('%d/%m/%Y %H:%M') if current_user.last_login else 'Jamais' }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Membre depuis</label>
+                        <input type="text" class="form-control" 
+                               value="{{ current_user.created_at.strftime('%d/%m/%Y') }}" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="showChangePasswordModal()">
+                        <i class="bi bi-key"></i> Changer le mot de passe
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" onclick="showEditProfileModal()">
+                        <i class="bi bi-pencil"></i> Modifier le profil
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">Statistiques</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">0</h4>
+                        <small class="text-muted">Transactions</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ current_user.groups.count() }}</h4>
+                        <small class="text-muted">Groupes</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour changer le mot de passe -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Changer le mot de passe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('auth.change_password') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Mot de passe actuel</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Nouveau mot de passe</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirmer le nouveau mot de passe</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Changer le mot de passe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour modifier le profil -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modifier le profil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('auth.update_profile') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_first_name" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="edit_first_name" name="first_name" 
+                                   value="{{ current_user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_last_name" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="edit_last_name" name="last_name" 
+                                   value="{{ current_user.last_name }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_phone" class="form-label">Téléphone</label>
+                        <input type="tel" class="form-control" id="edit_phone" name="phone" 
+                               value="{{ current_user.phone or '' }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showChangePasswordModal() {
+    new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
+}
+
+function showEditProfileModal() {
+    new bootstrap.Modal(document.getElementById('editProfileModal')).show();
+}
+</script>
+{% endblock %} 

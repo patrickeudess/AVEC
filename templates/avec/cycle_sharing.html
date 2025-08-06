@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Partage des Bénéfices - {{ group.name }}{% endblock %}
+
+{% block page_title %}Partage des Bénéfices{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations du cycle -->
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-calendar-check"></i> Cycle Terminé
+                </h6>
+            </div>
+            <div class="card-body">
+                <h5 class="mb-3">{{ cycle.name }}</h5>
+                <p class="text-muted">{{ cycle.description }}</p>
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h6 class="text-success">{{ "%.0f"|format(total_capital) }}</h6>
+                        <small class="text-muted">Capital total (FCFA)</small>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-info">{{ "%.1f"|format(total_shares) }}</h6>
+                        <small class="text-muted">Parts totales</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <h6 class="text-warning">{{ "%.0f"|format(group.total_savings) }}</h6>
+                    <small class="text-muted">Épargne initiale (FCFA)</small>
+                </div>
+                
+                <div class="text-center mt-2">
+                    <h6 class="text-danger">{{ "%.0f"|format(group.total_loans) }}</h6>
+                    <small class="text-muted">Intérêts générés (FCFA)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Calcul du partage -->
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-calculator"></i> Calcul du Partage des Bénéfices
+                </h6>
+                <small class="text-muted">Principe AVEC : Partage proportionnel aux parts</small>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Principe du partage AVEC :</strong> Le capital total (épargne + intérêts) est partagé proportionnellement au nombre de parts possédées par chaque membre.
+                </div>
+                
+                <form method="POST" action="{{ url_for('avec.execute_cycle_sharing', group_id=group.id) }}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Membre</th>
+                                    <th>Parts possédées</th>
+                                    <th>% du total</th>
+                                    <th>Part des bénéfices (FCFA)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in group.members %}
+                                {% set member_shares = members_shares.get(member.id, 0) %}
+                                {% set member_profit = members_profit.get(member.id, 0) %}
+                                {% set percentage = (member_shares / total_shares * 100) if total_shares > 0 else 0 %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ member.get_full_name() }}</div>
+                                                <small class="text-muted">{{ member.village or 'Village non spécifié' }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ "%.1f"|format(member_shares) }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                <div class="progress-bar bg-success" 
+                                                     role="progressbar" 
+                                                     style="width: {{ percentage }}%">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">{{ "%.1f"|format(percentage) }}%</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">{{ "%.0f"|format(member_profit) }}</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Attention :</strong> Cette action est irréversible. Le partage des bénéfices marquera la fin du cycle et créera des transactions de partage pour chaque membre.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('groups.show', id=group.id) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Êtes-vous sûr de vouloir exécuter le partage des bénéfices ?')">
+                            <i class="bi bi-check-circle"></i> Exécuter le Partage
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Résumé du cycle -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-graph-up"></i> Résumé du Cycle
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="border rounded p-3">
+                            <h4 class="text-primary">{{ "%.0f"|format(group.total_savings) }}</h4>
+                            <small class="text-muted">Épargne collectée (FCFA)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="border rounded p-3">
+                            <h4 class="text-success">{{ "%.0f"|format(group.total_loans) }}</h4>
+                            <small class="text-muted">Intérêts générés (FCFA)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="border rounded p-3">
+                            <h4 class="text-info">{{ "%.1f"|format(total_shares) }}</h4>
+                            <small class="text-muted">Parts totales achetées</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="border rounded p-3">
+                            <h4 class="text-warning">{{ group.members.count() }}</h4>
+                            <small class="text-muted">Membres participants</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <h5 class="text-success">Capital total à partager : {{ "%.0f"|format(total_capital) }} FCFA</h5>
+                    <p class="text-muted">Ce montant sera distribué proportionnellement aux parts de chaque membre</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historique des transactions du cycle -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-clock-history"></i> Historique des Transactions du Cycle
+                </h6>
+            </div>
+            <div class="card-body">
+                {% set cycle_transactions = group.transactions.filter(Transaction.created_at >= cycle.start_date).order_by(Transaction.created_at.desc()).all() %}
+                {% if cycle_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Membre</th>
+                                <th>Montant (FCFA)</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in cycle_transactions %}
+                            <tr>
+                                <td>
+                                    <small>{{ transaction.created_at.strftime('%d/%m/%Y') }}</small>
+                                </td>
+                                <td>
+                                    {% if transaction.type == 'shares_purchase' %}
+                                        <span class="badge bg-success">Achat parts</span>
+                                    {% elif transaction.type == 'loan' %}
+                                        <span class="badge bg-primary">Prêt</span>
+                                    {% elif transaction.type == 'loan_repayment' %}
+                                        <span class="badge bg-info">Remboursement</span>
+                                    {% elif transaction.type == 'solidarity' %}
+                                        <span class="badge bg-warning">Solidarité</span>
+                                    {% elif transaction.type == 'interest' %}
+                                        <span class="badge bg-danger">Intérêt</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ transaction.type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ transaction.user.get_full_name() }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ "%.0f"|format(transaction.amount) }}</strong>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ transaction.description[:50] }}{% if transaction.description and transaction.description|length > 50 %}...{% endif %}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-clock fa-2x text-muted"></i>
+                    <p class="text-muted mt-2">Aucune transaction enregistrée pour ce cycle</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

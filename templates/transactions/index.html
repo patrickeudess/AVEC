@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - AVEC{% endblock %}
+
+{% block page_title %}Transactions{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('transactions.create') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Nouvelle transaction
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-2">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="">Tous</option>
+                    <option value="savings" {% if request.args.get('type') == 'savings' %}selected{% endif %}>Épargne</option>
+                    <option value="loan" {% if request.args.get('type') == 'loan' %}selected{% endif %}>Prêt</option>
+                    <option value="repayment" {% if request.args.get('type') == 'repayment' %}selected{% endif %}>Remboursement</option>
+                    <option value="interest" {% if request.args.get('type') == 'interest' %}selected{% endif %}>Intérêt</option>
+                    <option value="fee" {% if request.args.get('type') == 'fee' %}selected{% endif %}>Frais</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="status" class="form-label">Statut</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Tous</option>
+                    <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>En attente</option>
+                    <option value="approved" {% if request.args.get('status') == 'approved' %}selected{% endif %}>Approuvé</option>
+                    <option value="rejected" {% if request.args.get('status') == 'rejected' %}selected{% endif %}>Rejeté</option>
+                    <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Complété</option>
+                    <option value="cancelled" {% if request.args.get('status') == 'cancelled' %}selected{% endif %}>Annulé</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="group_id" class="form-label">Groupe</label>
+                <select class="form-select" id="group_id" name="group_id">
+                    <option value="">Tous les groupes</option>
+                    {% for group in groups %}
+                    <option value="{{ group.id }}" {% if request.args.get('group_id')|int == group.id %}selected{% endif %}>
+                        {{ group.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="search" class="form-label">Recherche</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.args.get('search', '') }}" placeholder="Description...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des transactions -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Liste des transactions</h5>
+    </div>
+    <div class="card-body">
+        {% if transactions.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Montant</th>
+                        <th>Groupe</th>
+                        <th>Utilisateur</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions.items %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-{{ 'success' if transaction.type == 'savings' else 'warning' if transaction.type == 'loan' else 'info' if transaction.type == 'repayment' else 'secondary' }}">
+                                {{ transaction.type|title }}
+                            </span>
+                        </td>
+                                                 <td>
+                             <strong class="text-{{ 'success' if transaction.type == 'savings' else 'warning' if transaction.type == 'loan' else 'info' }}">
+                                 {{ "%.0f"|format(transaction.amount) }} FCFA
+                             </strong>
+                         </td>
+                        <td>
+                            <small>{{ transaction.group.name }}</small>
+                        </td>
+                        <td>
+                            <small>{{ transaction.user.get_full_name() if transaction.user else 'Utilisateur inconnu' }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'warning' if transaction.status == 'pending' else 'success' if transaction.status == 'approved' else 'danger' if transaction.status == 'rejected' else 'info' if transaction.status == 'completed' else 'secondary' }}">
+                                {{ transaction.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <small>{{ transaction.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('transactions.show', id=transaction.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if transaction.status == 'pending' and current_user.role in ['admin', 'supervisor', 'animator'] %}
+                                <button type="button" class="btn btn-sm btn-outline-success" 
+                                        onclick="approveTransaction({{ transaction.id }})">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="rejectTransaction({{ transaction.id }})">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if transactions.pages > 1 %}
+        <nav aria-label="Pagination des transactions">
+            <ul class="pagination justify-content-center">
+                {% if transactions.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('transactions.index', page=transactions.prev_num, **request.args) }}">Précédent</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in transactions.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != transactions.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('transactions.index', page=page_num, **request.args) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if transactions.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('transactions.index', page=transactions.next_num, **request.args) }}">Suivant</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-cash-coin fa-3x text-muted"></i>
+            <h4 class="text-muted mt-3">Aucune transaction trouvée</h4>
+            <p class="text-muted">Commencez par créer votre première transaction.</p>
+            <a href="{{ url_for('transactions.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Créer une transaction
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Formulaires pour les actions -->
+<form id="approveForm" method="POST" style="display: none;"></form>
+<form id="rejectForm" method="POST" style="display: none;">
+    <input type="hidden" name="reason" id="rejectReason">
+</form>
+
+<script>
+function approveTransaction(transactionId) {
+    if (confirm('Êtes-vous sûr de vouloir approuver cette transaction ?')) {
+        const form = document.getElementById('approveForm');
+        form.action = `/transactions/${transactionId}/approve`;
+        form.submit();
+    }
+}
+
+function rejectTransaction(transactionId) {
+    const reason = prompt('Raison du rejet (optionnel) :');
+    if (reason !== null) {
+        const form = document.getElementById('rejectForm');
+        document.getElementById('rejectReason').value = reason;
+        form.action = `/transactions/${transactionId}/reject`;
+        form.submit();
+    }
+}
+</script>
+{% endblock %} 

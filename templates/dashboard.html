@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord - AVEC{% endblock %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistiques -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Cycles actifs
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_cycles }}</div>
+                        <div class="text-xs text-muted">Sur {{ total_cycles }} total</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-calendar-event fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card success h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Groupes
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_groups }}</div>
+                        <div class="text-xs text-muted">Groupes actifs</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card info h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Transactions
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_transactions }}</div>
+                        <div class="text-xs text-muted">Ce mois</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-cash-coin fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card warning h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total Cycles
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cycles }}</div>
+                        <div class="text-xs text-muted">Tous cycles</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-calendar-check fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques et statistiques -->
+<div class="row mb-4">
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Évolution des cycles</h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Autre action</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Autre chose</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="cyclesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Répartition des phases</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie pt-4 pb-2">
+                    <canvas id="phasesChart"></canvas>
+                </div>
+                <div class="mt-4 text-center small">
+                    <span class="mr-2">
+                        <i class="bi bi-circle-fill text-primary"></i> Préparation
+                    </span>
+                    <span class="mr-2">
+                        <i class="bi bi-circle-fill text-success"></i> Formation
+                    </span>
+                    <span class="mr-2">
+                        <i class="bi bi-circle-fill text-info"></i> Supervision
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cycles récents -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Cycles récents</h6>
+                <a href="{{ url_for('cycles.index') }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-eye"></i> Voir tous
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_cycles %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Phase</th>
+                                <th>Statut</th>
+                                <th>Progression</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cycle in recent_cycles %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                            <i class="bi bi-calendar text-white"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ cycle.name }}</div>
+                                            <small class="text-muted">{{ cycle.description[:50] }}{% if cycle.description|length > 50 %}...{% endif %}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'primary' if cycle.phase == 'preparation' else 'info' if cycle.phase == 'formation' else 'warning' if cycle.phase == 'supervision' else 'success' }}">
+                                        {{ cycle.phase|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if cycle.status == 'active' else 'secondary' if cycle.status == 'paused' else 'danger' }}">
+                                        {{ cycle.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress-bar bg-{{ 'success' if cycle.get_progress_percentage() >= 75 else 'warning' if cycle.get_progress_percentage() >= 50 else 'info' }}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ cycle.get_progress_percentage() }}%"
+                                                 aria-valuenow="{{ cycle.get_progress_percentage() }}" 
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ "%.1f"|format(cycle.get_progress_percentage()) }}%</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('cycles.show', id=cycle.id) }}" class="btn btn-sm btn-outline-primary" title="Voir">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('cycles.edit', id=cycle.id) }}" class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar-x fa-3x text-muted"></i>
+                    <p class="text-muted mt-2">Aucun cycle créé pour le moment</p>
+                    <a href="{{ url_for('cycles.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Créer un cycle
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Actions rapides</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('cycles.create') }}" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-calendar-plus fa-2x mb-2"></i>
+                            <span>Nouveau cycle</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('groups.create') }}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-people-fill fa-2x mb-2"></i>
+                            <span>Nouveau groupe</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('transactions.create') }}" class="btn btn-info w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-cash-stack fa-2x mb-2"></i>
+                            <span>Nouvelle transaction</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('transactions.stats') }}" class="btn btn-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-graph-up fa-2x mb-2"></i>
+                            <span>Statistiques</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Graphique des cycles
+    const cyclesCtx = document.getElementById('cyclesChart').getContext('2d');
+    const cyclesChart = new Chart(cyclesCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+            datasets: [{
+                label: 'Cycles actifs',
+                data: [12, 19, 3, 5, 2, 3],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Nouveaux cycles',
+                data: [5, 8, 12, 15, 10, 8],
+                borderColor: '#764ba2',
+                backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Graphique des phases
+    const phasesCtx = document.getElementById('phasesChart').getContext('2d');
+    const phasesChart = new Chart(phasesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Préparation', 'Formation', 'Supervision', 'Terminé'],
+            datasets: [{
+                data: [30, 25, 20, 25],
+                backgroundColor: [
+                    '#667eea',
+                    '#28a745',
+                    '#17a2b8',
+                    '#6c757d'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

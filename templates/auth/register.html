@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Inscription - AVEC{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header text-center">
+                    <h4><i class="bi bi-person-plus"></i> Inscription AVEC</h4>
+                    <small class="text-muted">Rejoignez la communauté d'épargne et de crédit</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">Prénom</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Nom</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Téléphone (optionnel)</label>
+                            <input type="tel" class="form-control" id="phone" name="phone">
+                        </div>
+                        <div class="mb-3">
+                            <label for="village" class="form-label">Village d'origine</label>
+                            <input type="text" class="form-control" id="village" name="village" placeholder="Nom du village">
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Type de compte</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="member">Membre AVEC</option>
+                                <option value="animateur">Animateur/Animatrice</option>
+                            </select>
+                            <small class="text-muted">Choisissez votre rôle dans la communauté AVEC</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">S'inscrire</button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-success">
+                        <h6><i class="bi bi-check-circle"></i> Avantages AVEC :</h6>
+                        <ul class="mb-0">
+                            <li>Épargne collective sécurisée</li>
+                            <li>Accès aux prêts communautaires</li>
+                            <li>Formation en gestion financière</li>
+                            <li>Solidarité et entraide</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">Déjà un compte ?</p>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">Se connecter</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

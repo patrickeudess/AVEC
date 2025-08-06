@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Créer un groupe - AVEC{% endblock %}
+
+{% block page_title %}Créer un groupe{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('groups.index') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people-fill"></i> Nouveau groupe AVEC</h5>
+                <small class="text-muted">Créer un groupe d'épargne et de crédit villageois</small>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Nom du groupe *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cycle_id" class="form-label">Cycle *</label>
+                            <select class="form-select" id="cycle_id" name="cycle_id" required>
+                                <option value="">Sélectionner un cycle...</option>
+                                {% for cycle in cycles %}
+                                <option value="{{ cycle.id }}" 
+                                        {% if request.args.get('cycle_id')|int == cycle.id %}selected{% endif %}>
+                                    {{ cycle.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Description du groupe..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="village" class="form-label">Village *</label>
+                        <input type="text" class="form-control" id="village" name="village" 
+                               placeholder="Nom du village" required>
+                        <small class="text-muted">Village où se trouve le groupe AVEC</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="max_members" class="form-label">Nombre max de membres</label>
+                            <input type="number" class="form-control" id="max_members" name="max_members"
+                                   min="1" max="50" value="25">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="contribution_amount" class="form-label">Montant de contribution (FCFA)</label>
+                            <input type="number" class="form-control" id="contribution_amount" name="contribution_amount"
+                                   step="100" min="0" placeholder="1000">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="share_value" class="form-label">Valeur d'une part (FCFA) *</label>
+                            <input type="number" class="form-control" id="share_value" name="share_value"
+                                   step="100" min="100" value="1000" required>
+                            <small class="text-muted">Montant minimum pour acheter une part</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="loan_interest_rate" class="form-label">Taux d'intérêt pour prêts (%)</label>
+                            <input type="number" class="form-control" id="loan_interest_rate" name="loan_interest_rate"
+                                   step="0.1" min="0" max="50" value="10">
+                            <small class="text-muted">Taux d'intérêt mensuel pour les prêts</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_location" class="form-label">Lieu de réunion</label>
+                            <input type="text" class="form-control" id="meeting_location" name="meeting_location"
+                                   placeholder="Adresse ou lieu de réunion">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_time" class="form-label">Heure de réunion</label>
+                            <input type="time" class="form-control" id="meeting_time" name="meeting_time">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Rappel AVEC :</strong> Le groupe sera créé avec les paramètres de base. 
+                        Les membres pourront ensuite acheter des parts et demander des prêts selon les règles établies.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('groups.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Créer le groupe
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

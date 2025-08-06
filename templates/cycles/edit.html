@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Modifier {{ cycle.name }} - AVEC{% endblock %}
+
+{% block page_title %}Modifier {{ cycle.name }}{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('cycles.show', id=cycle.id) }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Modifier le cycle</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Nom du cycle *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ cycle.name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="start_date" class="form-label">Date de début *</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ cycle.start_date.strftime('%Y-%m-%d') }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Description du cycle d'épargne...">{{ cycle.description or '' }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="end_date" class="form-label">Date de fin</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ cycle.end_date.strftime('%Y-%m-%d') if cycle.end_date else '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="target_amount" class="form-label">Montant cible</label>
+                            <input type="number" class="form-control" id="target_amount" name="target_amount"
+                                   step="0.01" min="0" placeholder="0.00" value="{{ cycle.target_amount }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="interest_rate" class="form-label">Taux d'intérêt (%)</label>
+                            <input type="number" class="form-control" id="interest_rate" name="interest_rate"
+                                   step="0.01" min="0" max="100" placeholder="0.00" value="{{ cycle.interest_rate }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="status" class="form-label">Statut</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="active" {% if cycle.status == 'active' %}selected{% endif %}>Actif</option>
+                                <option value="paused" {% if cycle.status == 'paused' %}selected{% endif %}>En pause</option>
+                                <option value="completed" {% if cycle.status == 'completed' %}selected{% endif %}>Terminé</option>
+                                <option value="cancelled" {% if cycle.status == 'cancelled' %}selected{% endif %}>Annulé</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="phase" class="form-label">Phase</label>
+                            <select class="form-select" id="phase" name="phase">
+                                <option value="preparation" {% if cycle.phase == 'preparation' %}selected{% endif %}>Préparation</option>
+                                <option value="formation" {% if cycle.phase == 'formation' %}selected{% endif %}>Formation</option>
+                                <option value="supervision" {% if cycle.phase == 'supervision' %}selected{% endif %}>Supervision</option>
+                                <option value="completed" {% if cycle.phase == 'completed' %}selected{% endif %}>Terminé</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_frequency" class="form-label">Fréquence des réunions</label>
+                            <select class="form-select" id="meeting_frequency" name="meeting_frequency">
+                                <option value="weekly" {% if cycle.meeting_frequency == 'weekly' %}selected{% endif %}>Hebdomadaire</option>
+                                <option value="biweekly" {% if cycle.meeting_frequency == 'biweekly' %}selected{% endif %}>Bi-hebdomadaire</option>
+                                <option value="monthly" {% if cycle.meeting_frequency == 'monthly' %}selected{% endif %}>Mensuelle</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="meeting_day" class="form-label">Jour de réunion</label>
+                            <select class="form-select" id="meeting_day" name="meeting_day">
+                                <option value="">Sélectionner un jour</option>
+                                <option value="monday" {% if cycle.meeting_day == 'monday' %}selected{% endif %}>Lundi</option>
+                                <option value="tuesday" {% if cycle.meeting_day == 'tuesday' %}selected{% endif %}>Mardi</option>
+                                <option value="wednesday" {% if cycle.meeting_day == 'wednesday' %}selected{% endif %}>Mercredi</option>
+                                <option value="thursday" {% if cycle.meeting_day == 'thursday' %}selected{% endif %}>Jeudi</option>
+                                <option value="friday" {% if cycle.meeting_day == 'friday' %}selected{% endif %}>Vendredi</option>
+                                <option value="saturday" {% if cycle.meeting_day == 'saturday' %}selected{% endif %}>Samedi</option>
+                                <option value="sunday" {% if cycle.meeting_day == 'sunday' %}selected{% endif %}>Dimanche</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('cycles.show', id=cycle.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

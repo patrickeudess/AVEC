@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle Réunion - {{ group.name }}{% endblock %}
+
+{% block page_title %}Nouvelle Réunion{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-calendar-plus"></i> Créer une Nouvelle Réunion
+                </h6>
+                <small class="text-muted">Groupe : {{ group.name }}</small>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="meeting_date" class="form-label">Date et heure de réunion *</label>
+                                <input type="datetime-local" class="form-control" id="meeting_date" name="meeting_date" required>
+                                <small class="text-muted">Date et heure de la réunion</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="meeting_type" class="form-label">Type de réunion</label>
+                                <select class="form-select" id="meeting_type" name="meeting_type">
+                                    <option value="regular">Réunion régulière</option>
+                                    <option value="formation">Session de formation</option>
+                                    <option value="emergency">Réunion d'urgence</option>
+                                </select>
+                                <small class="text-muted">Type de réunion à organiser</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="attendees_count" class="form-label">Nombre de participants attendus</label>
+                        <input type="number" class="form-control" id="attendees_count" name="attendees_count" 
+                               min="1" max="{{ group.members.count() }}" value="{{ group.members.count() }}">
+                        <small class="text-muted">Nombre de membres attendus (max: {{ group.members.count() }})</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="agenda" class="form-label">Ordre du jour</label>
+                        <textarea class="form-control" id="agenda" name="agenda" rows="4"
+                                  placeholder="Listez les points à aborder lors de cette réunion..."></textarea>
+                        <small class="text-muted">Points à discuter lors de la réunion</small>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Rappel AVEC :</strong> Les réunions sont essentielles pour la transparence et la prise de décision collective. 
+                        Toutes les transactions importantes doivent être effectuées en présence de tous les membres.
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('avec.group_meetings', group_id=group.id) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-calendar-check"></i> Créer la Réunion
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Informations du groupe -->
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-info-circle"></i> Informations du Groupe
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Nom du groupe:</strong> {{ group.name }}</p>
+                        <p><strong>Village:</strong> {{ group.village }}</p>
+                        <p><strong>Membres:</strong> {{ group.members.count() }} personnes</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Lieu de réunion:</strong> {{ group.meeting_location or 'Non défini' }}</p>
+                        <p><strong>Heure habituelle:</strong> {{ group.meeting_time.strftime('%H:%M') if group.meeting_time else 'Non définie' }}</p>
+                        <p><strong>Valeur d'une part:</strong> {{ "%.0f"|format(group.share_value) }} FCFA</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Ajouter un membre - {{ group.name }} - AVEC{% endblock %}
+
+{% block page_title %}Ajouter un membre à {{ group.name }}{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('groups.show', id=group.id) }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Retour
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Ajouter un membre</h5>
+            </div>
+            <div class="card-body">
+                <!-- Informations du groupe -->
+                <div class="alert alert-info">
+                    <h6>Informations du groupe</h6>
+                    <p class="mb-1"><strong>Nom :</strong> {{ group.name }}</p>
+                    <p class="mb-1"><strong>Membres actuels :</strong> {{ group.current_members }}/{{ group.max_members }}</p>
+                    <p class="mb-0"><strong>Statut :</strong> 
+                        <span class="badge bg-{{ 'success' if group.status == 'active' else 'secondary' if group.status == 'inactive' else 'warning' if group.status == 'full' else 'danger' }}">
+                            {{ group.status|title }}
+                        </span>
+                    </p>
+                </div>
+
+                {% if not group.can_accept_members() %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Attention :</strong> Ce groupe ne peut plus accepter de nouveaux membres car il est complet.
+                </div>
+                {% else %}
+                <!-- Formulaire d'ajout -->
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">Sélectionner un utilisateur *</label>
+                        <select class="form-select" id="user_id" name="user_id" required>
+                            <option value="">Choisir un utilisateur...</option>
+                            {% for user in available_users %}
+                            <option value="{{ user.id }}">
+                                {{ user.get_full_name() }} ({{ user.email }})
+                                {% if user.phone %} - {{ user.phone }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Seuls les utilisateurs non membres de ce groupe sont affichés.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('groups.show', id=group.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Ajouter le membre
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Liste des utilisateurs disponibles -->
+        {% if available_users %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Utilisateurs disponibles ({{ available_users|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Rôle</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in available_users %}
+                            <tr>
+                                <td>
+                                    <strong>{{ user.get_full_name() }}</strong>
+                                </td>
+                                <td>
+                                    <small>{{ user.email }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ user.phone or 'Non renseigné' }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'primary' if user.role == 'admin' else 'info' if user.role == 'supervisor' else 'success' if user.role == 'animator' else 'secondary' }}">
+                                        {{ user.role|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if user.status == 'active' else 'danger' }}">
+                                        {{ user.status|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <i class="bi bi-people fa-3x text-muted"></i>
+                <h5 class="text-muted mt-3">Aucun utilisateur disponible</h5>
+                <p class="text-muted">Tous les utilisateurs sont déjà membres de ce groupe ou inactifs.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

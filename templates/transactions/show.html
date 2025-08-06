@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction #{{ transaction.id }} - AVEC{% endblock %}
+
+{% block page_title %}Transaction #{{ transaction.id }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    {% if transaction.status == 'pending' and current_user.role in ['admin', 'supervisor', 'animator'] %}
+    <form method="POST" action="{{ url_for('transactions.approve', id=transaction.id) }}" style="display: inline;">
+        <button type="submit" class="btn btn-success" onclick="return confirm('Approuver cette transaction ?')">
+            <i class="bi bi-check"></i> Approuver
+        </button>
+    </form>
+    <button type="button" class="btn btn-danger" onclick="showRejectModal()">
+        <i class="bi bi-x"></i> Rejeter
+    </button>
+    {% endif %}
+    {% if transaction.status == 'approved' %}
+    <form method="POST" action="{{ url_for('transactions.complete', id=transaction.id) }}" style="display: inline;">
+        <button type="submit" class="btn btn-info" onclick="return confirm('Marquer comme complétée ?')">
+            <i class="bi bi-check-circle"></i> Compléter
+        </button>
+    </form>
+    {% endif %}
+    <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- Informations de la transaction -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Détails de la transaction</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Type :</strong> 
+                            <span class="badge bg-{{ 'success' if transaction.type == 'savings' else 'warning' if transaction.type == 'loan' else 'info' if transaction.type == 'repayment' else 'secondary' }}">
+                                {{ transaction.type|title }}
+                            </span>
+                        </p>
+                        <p><strong>Montant :</strong> 
+                            <span class="h5 text-{{ 'success' if transaction.type == 'savings' else 'warning' if transaction.type == 'loan' else 'info' }}">
+                                {{ "%.0f"|format(transaction.amount) }} FCFA
+                            </span>
+                        </p>
+                        <p><strong>Statut :</strong> 
+                            <span class="badge bg-{{ 'warning' if transaction.status == 'pending' else 'success' if transaction.status == 'approved' else 'danger' if transaction.status == 'rejected' else 'info' if transaction.status == 'completed' else 'secondary' }}">
+                                {{ transaction.status|title }}
+                            </span>
+                        </p>
+                        <p><strong>Groupe :</strong> 
+                            <a href="{{ url_for('groups.show', id=transaction.group.id) }}" class="text-decoration-none">
+                                {{ transaction.group.name }}
+                            </a>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Utilisateur :</strong> {{ transaction.user.get_full_name() }}</p>
+                        <p><strong>Créée le :</strong> {{ transaction.created_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+                        {% if transaction.due_date %}
+                        <p><strong>Date d'échéance :</strong> {{ transaction.due_date.strftime('%d/%m/%Y') }}</p>
+                        {% endif %}
+                        {% if transaction.interest_rate %}
+                        <p><strong>Taux d'intérêt :</strong> {{ "%.2f"|format(transaction.interest_rate) }}%</p>
+                        {% endif %}
+                        {% if transaction.loan_term %}
+                        <p><strong>Durée du prêt :</strong> {{ transaction.loan_term }} mois</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if transaction.description %}
+                <hr>
+                <h6>Description</h6>
+                <p>{{ transaction.description }}</p>
+                {% endif %}
+
+                {% if transaction.approved_by %}
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Approuvée par :</strong> {{ transaction.approver.get_full_name() }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Approuvée le :</strong> {{ transaction.approved_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Historique des actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Historique</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6>Transaction créée</h6>
+                            <p class="text-muted">{{ transaction.created_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+                            <p>Par {{ transaction.user.get_full_name() }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if transaction.approved_at %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>Transaction approuvée</h6>
+                            <p class="text-muted">{{ transaction.approved_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+                            <p>Par {{ transaction.approver.get_full_name() }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if transaction.status == 'completed' %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6>Transaction complétée</h6>
+                            <p class="text-muted">Marquée comme terminée</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                {% if transaction.status == 'pending' and current_user.role in ['admin', 'supervisor', 'animator'] %}
+                <div class="d-grid gap-2">
+                    <form method="POST" action="{{ url_for('transactions.approve', id=transaction.id) }}">
+                        <button type="submit" class="btn btn-success w-100" onclick="return confirm('Approuver cette transaction ?')">
+                            <i class="bi bi-check"></i> Approuver
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-danger w-100" onclick="showRejectModal()">
+                        <i class="bi bi-x"></i> Rejeter
+                    </button>
+                </div>
+                {% elif transaction.status == 'approved' %}
+                <div class="d-grid gap-2">
+                    <form method="POST" action="{{ url_for('transactions.complete', id=transaction.id) }}">
+                        <button type="submit" class="btn btn-info w-100" onclick="return confirm('Marquer comme complétée ?')">
+                            <i class="bi bi-check-circle"></i> Compléter
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Cette transaction ne peut plus être modifiée.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Informations du groupe -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Informations du groupe</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Nom :</strong> {{ transaction.group.name }}</p>
+                <p><strong>Cycle :</strong> {{ transaction.group.cycle.name }}</p>
+                <p><strong>Membres :</strong> {{ transaction.group.current_members }}/{{ transaction.group.max_members }}</p>
+                <p><strong>Total épargnes :</strong> <span class="text-success">{{ "%.0f"|format(transaction.group.total_savings) }} FCFA</span></p>
+                <p><strong>Total prêts :</strong> <span class="text-warning">{{ "%.0f"|format(transaction.group.total_loans) }} FCFA</span></p>
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('groups.show', id=transaction.group.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-eye"></i> Voir le groupe
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour rejeter la transaction -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rejeter la transaction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('transactions.reject', id=transaction.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Raison du rejet (optionnel)</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3"
+                                  placeholder="Expliquez pourquoi cette transaction est rejetée..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Rejeter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 3px solid #dee2e6;
+}
+
+.timeline-content h6 {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+</style>
+
+<script>
+function showRejectModal() {
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+</script>
+{% endblock %} 
