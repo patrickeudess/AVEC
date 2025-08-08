@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cycle.name }} - AVEC{% endblock %}
+
+{% block page_title %}{{ cycle.name }}{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <a href="{{ url_for('cycles.edit', id=cycle.id) }}" class="btn btn-warning">
+        <i class="bi bi-pencil"></i> Modifier
+    </a>
+    {% if cycle.phase != 'completed' and current_user.role in ['admin', 'supervisor', 'animator'] %}
+    <form method="POST" action="{{ url_for('cycles.next_phase', id=cycle.id) }}" style="display: inline;">
+        <button type="submit" class="btn btn-success" onclick="return confirm('Passer à la phase suivante ?')">
+            <i class="bi bi-arrow-right"></i> Phase suivante
+        </button>
+    </form>
+    {% endif %}
+    <a href="{{ url_for('cycles.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- Informations du cycle -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Informations du cycle</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Nom :</strong> {{ cycle.name }}</p>
+                        <p><strong>Phase :</strong> 
+                            <span class="badge bg-{{ 'primary' if cycle.phase == 'preparation' else 'info' if cycle.phase == 'formation' else 'warning' if cycle.phase == 'supervision' else 'success' }}">
+                                {{ cycle.phase|title }}
+                            </span>
+                        </p>
+                        <p><strong>Statut :</strong> 
+                            <span class="badge bg-{{ 'success' if cycle.status == 'active' else 'secondary' if cycle.status == 'paused' else 'danger' }}">
+                                {{ cycle.status|title }}
+                            </span>
+                        </p>
+                        <p><strong>Progression :</strong></p>
+                        <div class="progress mb-3">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ cycle.get_progress_percentage() }}%"
+                                 aria-valuenow="{{ cycle.get_progress_percentage() }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ "%.1f"|format(cycle.get_progress_percentage()) }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Date de début :</strong> {{ cycle.start_date.strftime('%d/%m/%Y') }}</p>
+                        {% if cycle.end_date %}
+                        <p><strong>Date de fin :</strong> {{ cycle.end_date.strftime('%d/%m/%Y') }}</p>
+                        {% endif %}
+                        <p><strong>Montant cible :</strong> {{ "%.0f"|format(cycle.target_amount) }} FCFA</p>
+                        <p><strong>Taux d'intérêt :</strong> {{ "%.2f"|format(cycle.interest_rate) }}%</p>
+                        <p><strong>Fréquence des réunions :</strong> {{ cycle.meeting_frequency|title }}</p>
+                        {% if cycle.meeting_day %}
+                        <p><strong>Jour de réunion :</strong> {{ cycle.meeting_day|title }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if cycle.description %}
+                <hr>
+                <h6>Description</h6>
+                <p>{{ cycle.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Groupes du cycle -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Groupes ({{ groups|length }})</h5>
+                <a href="{{ url_for('groups.create') }}?cycle_id={{ cycle.id }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Nouveau groupe
+                </a>
+            </div>
+            <div class="card-body">
+                {% if groups %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Statut</th>
+                                <th>Membres</th>
+                                <th>Épargnes</th>
+                                <th>Prêts</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for group in groups %}
+                            <tr>
+                                <td>
+                                    <strong>{{ group.name }}</strong>
+                                    {% if group.description %}
+                                    <br><small class="text-muted">{{ group.description[:50] }}{% if group.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if group.status == 'active' else 'secondary' if group.status == 'inactive' else 'warning' if group.status == 'full' else 'danger' }}">
+                                        {{ group.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2">{{ group.current_members }}/{{ group.max_members }}</span>
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar" role="progressbar"
+                                                 style="width: {{ (group.current_members / group.max_members) * 100 }}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-success">{{ "%.0f"|format(group.total_savings) }} FCFA</span>
+                                </td>
+                                <td>
+                                    <span class="text-warning">{{ "%.0f"|format(group.total_loans) }} FCFA</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('groups.show', id=group.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('groups.edit', id=group.id) }}" class="btn btn-sm btn-outline-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-people fa-3x text-muted"></i>
+                    <h5 class="text-muted mt-3">Aucun groupe créé</h5>
+                    <p class="text-muted">Commencez par créer un groupe pour ce cycle.</p>
+                    <a href="{{ url_for('groups.create') }}?cycle_id={{ cycle.id }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Créer un groupe
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Statistiques -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Statistiques</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-primary">{{ groups|length }}</h4>
+                        <small class="text-muted">Groupes</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-success">{{ groups|selectattr('status', 'equalto', 'active')|list|length }}</h4>
+                        <small class="text-muted">Actifs</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-info">{{ groups|sum(attribute='current_members') }}</h4>
+                        <small class="text-muted">Membres</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-warning">{{ "%.0f"|format(groups|sum(attribute='total_savings')) }} FCFA</h4>
+                        <small class="text-muted">Épargnes</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actions rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('groups.create') }}?cycle_id={{ cycle.id }}" class="btn btn-primary">
+                        <i class="bi bi-people-fill"></i> Nouveau groupe
+                    </a>
+                    <a href="{{ url_for('transactions.create') }}?cycle_id={{ cycle.id }}" class="btn btn-success">
+                        <i class="bi bi-cash-stack"></i> Nouvelle transaction
+                    </a>
+                    <a href="{{ url_for('transactions.stats') }}?cycle_id={{ cycle.id }}" class="btn btn-info">
+                        <i class="bi bi-graph-up"></i> Statistiques
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Cycles - AVEC{% endblock %}
+
+{% block page_title %}Cycles{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('cycles.create') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Nouveau cycle
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Statut</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Tous</option>
+                    <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Actif</option>
+                    <option value="paused" {% if request.args.get('status') == 'paused' %}selected{% endif %}>En pause</option>
+                    <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Terminé</option>
+                    <option value="cancelled" {% if request.args.get('status') == 'cancelled' %}selected{% endif %}>Annulé</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="phase" class="form-label">Phase</label>
+                <select class="form-select" id="phase" name="phase">
+                    <option value="">Toutes</option>
+                    <option value="preparation" {% if request.args.get('phase') == 'preparation' %}selected{% endif %}>Préparation</option>
+                    <option value="formation" {% if request.args.get('phase') == 'formation' %}selected{% endif %}>Formation</option>
+                    <option value="supervision" {% if request.args.get('phase') == 'supervision' %}selected{% endif %}>Supervision</option>
+                    <option value="completed" {% if request.args.get('phase') == 'completed' %}selected{% endif %}>Terminé</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search" class="form-label">Recherche</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.args.get('search', '') }}" placeholder="Nom du cycle...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liste des cycles -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Liste des cycles</h5>
+    </div>
+    <div class="card-body">
+        {% if cycles.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Phase</th>
+                        <th>Statut</th>
+                        <th>Progression</th>
+                        <th>Groupes</th>
+                        <th>Créé le</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cycle in cycles.items %}
+                    <tr>
+                        <td>
+                            <strong>{{ cycle.name }}</strong>
+                            {% if cycle.description %}
+                            <br><small class="text-muted">{{ cycle.description[:50] }}{% if cycle.description|length > 50 %}...{% endif %}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'primary' if cycle.phase == 'preparation' else 'info' if cycle.phase == 'formation' else 'warning' if cycle.phase == 'supervision' else 'success' }}">
+                                {{ cycle.phase|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if cycle.status == 'active' else 'secondary' if cycle.status == 'paused' else 'danger' }}">
+                                {{ cycle.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ cycle.get_progress_percentage() }}%"
+                                     aria-valuenow="{{ cycle.get_progress_percentage() }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ "%.1f"|format(cycle.get_progress_percentage()) }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ cycle.groups.count() }} groupes</span>
+                        </td>
+                        <td>
+                            <small>{{ cycle.created_at.strftime('%d/%m/%Y') }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('cycles.show', id=cycle.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('cycles.edit', id=cycle.id) }}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="confirmDelete({{ cycle.id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if cycles.pages > 1 %}
+        <nav aria-label="Pagination des cycles">
+            <ul class="pagination justify-content-center">
+                {% if cycles.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('cycles.index', page=cycles.prev_num, **request.args) }}">Précédent</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in cycles.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != cycles.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('cycles.index', page=page_num, **request.args) }}">{{ page_num }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if cycles.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('cycles.index', page=cycles.next_num, **request.args) }}">Suivant</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-calendar-x fa-3x text-muted"></i>
+            <h4 class="text-muted mt-3">Aucun cycle trouvé</h4>
+            <p class="text-muted">Commencez par créer votre premier cycle d'épargne.</p>
+            <a href="{{ url_for('cycles.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Créer un cycle
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Formulaire de suppression -->
+<form id="deleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="_method" value="DELETE">
+</form>
+
+<script>
+function confirmDelete(cycleId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce cycle ? Cette action est irréversible.')) {
+        const form = document.getElementById('deleteForm');
+        form.action = `/cycles/${cycleId}/delete`;
+        form.submit();
+    }
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Carnet de Comptes - {{ user.get_full_name() }}{% endblock %}
+
+{% block page_title %}Carnet de Comptes{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations du membre -->
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-person-circle"></i> Informations du Membre
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="avatar-lg bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-person text-white fa-2x"></i>
+                    </div>
+                    <h5 class="mb-1">{{ user.get_full_name() }}</h5>
+                    <p class="text-muted mb-0">{{ user.village or 'Village non spécifié' }}</p>
+                    <span class="badge bg-{{ 'success' if user.status == 'active' else 'secondary' }} mt-2">
+                        {{ user.status|title }}
+                    </span>
+                </div>
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h6 class="text-primary">{{ "%.0f"|format(total_savings) }}</h6>
+                        <small class="text-muted">Épargne (FCFA)</small>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-info">{{ "%.0f"|format(total_loans) }}</h6>
+                        <small class="text-muted">Prêts (FCFA)</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <h6 class="text-success">{{ "%.0f"|format(total_solidarity) }}</h6>
+                    <small class="text-muted">Solidarité (FCFA)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Résumé des transactions -->
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-list-ul"></i> Historique des Transactions
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Montant (FCFA)</th>
+                                <th>Statut</th>
+                                <th>Groupe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>
+                                    <small>{{ transaction.created_at.strftime('%d/%m/%Y') }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if transaction.type == 'savings' else 'info' if transaction.type == 'loan' else 'warning' if transaction.type == 'solidarity' else 'secondary' }}">
+                                        {% if transaction.type == 'savings' %}
+                                            <i class="bi bi-piggy-bank"></i> Épargne
+                                        {% elif transaction.type == 'loan' %}
+                                            <i class="bi bi-cash-stack"></i> Prêt
+                                        {% elif transaction.type == 'solidarity' %}
+                                            <i class="bi bi-heart"></i> Solidarité
+                                        {% else %}
+                                            {{ transaction.type|title }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ "%.0f"|format(transaction.amount) }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if transaction.status == 'completed' else 'warning' if transaction.status == 'pending' else 'danger' }}">
+                                        {{ transaction.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ transaction.group.name }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-journal-x fa-3x text-muted"></i>
+                    <h5 class="text-muted mt-3">Aucune transaction</h5>
+                    <p class="text-muted">Aucune transaction enregistrée pour le moment.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques détaillées -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-graph-up"></i> Statistiques Détaillées
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-success">{{ "%.0f"|format(total_savings) }}</div>
+                            <small class="text-muted">Total Épargne (FCFA)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-info">{{ "%.0f"|format(total_loans) }}</div>
+                            <small class="text-muted">Total Prêts (FCFA)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-warning">{{ "%.0f"|format(total_solidarity) }}</div>
+                            <small class="text-muted">Total Solidarité (FCFA)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div class="h4 text-primary">{{ transactions|length }}</div>
+                            <small class="text-muted">Nombre de Transactions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

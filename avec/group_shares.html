@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Parts - {{ group.name }}{% endblock %}
+
+{% block page_title %}Parts du Groupe{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations du groupe -->
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-people"></i> Informations du Groupe
+                </h6>
+            </div>
+            <div class="card-body">
+                <h5 class="mb-3">{{ group.name }}</h5>
+                <p class="text-muted">{{ group.description }}</p>
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h6 class="text-primary">{{ "%.0f"|format(group.share_value) }}</h6>
+                        <small class="text-muted">Valeur d'une part (FCFA)</small>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-success">{{ "%.0f"|format(total_shares) }}</h6>
+                        <small class="text-muted">Parts totales</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <h6 class="text-info">{{ "%.0f"|format(group.total_savings) }}</h6>
+                    <small class="text-muted">Épargne totale (FCFA)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Achat de parts -->
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-cart-plus"></i> Acheter des Parts
+                </h6>
+                <small class="text-muted">Réunion d'épargne - Transparence AVEC</small>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('avec.purchase_shares', group_id=group.id) }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="amount" class="form-label">Montant (FCFA) *</label>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       step="{{ group.share_value }}" min="{{ group.share_value }}" required>
+                                <small class="text-muted">Doit être un multiple de {{ "%.0f"|format(group.share_value) }} FCFA</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="meeting_date" class="form-label">Date de réunion *</label>
+                                <input type="date" class="form-control" id="meeting_date" name="meeting_date" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="witnesses" class="form-label">Membres présents (témoins)</label>
+                        <textarea class="form-control" id="witnesses" name="witnesses" rows="3"
+                                  placeholder="Listez les membres présents lors de cette transaction pour la transparence..."></textarea>
+                        <small class="text-muted">Principe de transparence AVEC - toutes les transactions sont publiques</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('groups.show', id=group.id) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-cart-check"></i> Acheter des Parts
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Répartition des parts par membre -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-pie-chart"></i> Répartition des Parts par Membre
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if group.members.all() %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Membre</th>
+                                <th>Parts possédées</th>
+                                <th>Valeur des parts (FCFA)</th>
+                                <th>% du total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in group.members %}
+                            {% set member_shares = members_shares.get(member.id, 0) %}
+                            {% set member_value = member_shares * group.share_value %}
+                            {% set percentage = (member_shares / total_shares * 100) if total_shares > 0 else 0 %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                            <i class="bi bi-person text-white"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ member.get_full_name() }}</div>
+                                            <small class="text-muted">{{ member.village or 'Village non spécifié' }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ "%.1f"|format(member_shares) }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ "%.0f"|format(member_value) }}</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                            <div class="progress-bar bg-success" 
+                                                 role="progressbar" 
+                                                 style="width: {{ percentage }}%">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ "%.1f"|format(percentage) }}%</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('avec.member_account_book', user_id=member.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="Voir carnet">
+                                        <i class="bi bi-journal-text"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-people fa-3x text-muted"></i>
+                    <h5 class="text-muted mt-3">Aucun membre</h5>
+                    <p class="text-muted">Aucun membre n'a encore acheté de parts.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historique des achats de parts -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-clock-history"></i> Historique des Achats de Parts
+                </h6>
+            </div>
+            <div class="card-body">
+                {% set shares_transactions = group.transactions.filter_by(type='shares_purchase').order_by(Transaction.created_at.desc()).all() %}
+                {% if shares_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Membre</th>
+                                <th>Parts achetées</th>
+                                <th>Montant (FCFA)</th>
+                                <th>Réunion</th>
+                                <th>Témoins</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in shares_transactions %}
+                            <tr>
+                                <td>
+                                    <small>{{ transaction.created_at.strftime('%d/%m/%Y') }}</small>
+                                </td>
+                                <td>
+                                    <small>{{ transaction.user.get_full_name() }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ "%.1f"|format(transaction.amount / group.share_value) }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ "%.0f"|format(transaction.amount) }}</strong>
+                                </td>
+                                <td>
+                                    <small>{{ transaction.meeting_date.strftime('%d/%m/%Y') if transaction.meeting_date else 'Non spécifié' }}</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ transaction.witnesses[:50] }}{% if transaction.witnesses and transaction.witnesses|length > 50 %}...{% endif %}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-clock fa-2x text-muted"></i>
+                    <p class="text-muted mt-2">Aucun achat de parts enregistré</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

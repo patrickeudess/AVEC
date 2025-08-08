@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Évaluation de Communauté - AVEC{% endblock %}
+
+{% block page_title %}Évaluation de Communauté{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-building"></i> Évaluation et Sélection de la Communauté
+                </h6>
+                <small class="text-muted">Phase Préparatoire - Collecte des informations initiales</small>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="village_name" class="form-label">Nom du Village *</label>
+                                <input type="text" class="form-control" id="village_name" name="village_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="population" class="form-label">Population estimée</label>
+                                <input type="number" class="form-control" id="population" name="population">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="main_activities" class="form-label">Activités principales</label>
+                        <textarea class="form-control" id="main_activities" name="main_activities" rows="3" 
+                                  placeholder="Agriculture, élevage, commerce, artisanat..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="existing_groups" class="form-label">Groupes existants</label>
+                        <textarea class="form-control" id="existing_groups" name="existing_groups" rows="3"
+                                  placeholder="Tontines, associations, coopératives..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="needs_assessment" class="form-label">Évaluation des besoins</label>
+                        <textarea class="form-control" id="needs_assessment" name="needs_assessment" rows="4"
+                                  placeholder="Besoins identifiés par la communauté (accès au crédit, épargne, formation..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="community_interest" name="community_interest">
+                            <label class="form-check-label" for="community_interest">
+                                La communauté manifeste un intérêt pour l'AVEC
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('avec.community_evaluations') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Enregistrer l'évaluation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

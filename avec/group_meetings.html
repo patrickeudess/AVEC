@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Réunions du Groupe - {{ group.name }}{% endblock %}
+
+{% block page_title %}Réunions du Groupe{% endblock %}
+
+{% block page_actions %}
+{% if current_user.role in ['admin', 'animateur'] or current_user in [group.get_president(), group.get_secretary()] %}
+<a href="{{ url_for('avec.create_meeting', group_id=group.id) }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Nouvelle Réunion
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations du groupe -->
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-people"></i> Informations du Groupe
+                </h6>
+            </div>
+            <div class="card-body">
+                <h5 class="mb-3">{{ group.name }}</h5>
+                <p class="text-muted">{{ group.description }}</p>
+                
+                <hr>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h6 class="text-primary">{{ group.members.count() }}</h6>
+                        <small class="text-muted">Membres</small>
+                    </div>
+                    <div class="col-6">
+                        <h6 class="text-success">{{ meetings|length }}</h6>
+                        <small class="text-muted">Réunions</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <h6 class="text-info">{{ group.meeting_location or 'Lieu non défini' }}</h6>
+                    <small class="text-muted">Lieu de réunion</small>
+                </div>
+                
+                {% if group.meeting_time %}
+                <div class="text-center mt-2">
+                    <h6 class="text-warning">{{ group.meeting_time.strftime('%H:%M') }}</h6>
+                    <small class="text-muted">Heure de réunion</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Liste des réunions -->
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-calendar-event"></i> Historique des Réunions
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if meetings %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Participants</th>
+                                <th>Ordre du jour</th>
+                                <th>Décisions</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for meeting in meetings %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ meeting.meeting_date.strftime('%d/%m/%Y') }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ meeting.meeting_date.strftime('%H:%M') }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if meeting.meeting_type == 'regular' %}
+                                        <span class="badge bg-primary">Réunion régulière</span>
+                                    {% elif meeting.meeting_type == 'emergency' %}
+                                        <span class="badge bg-danger">Réunion d'urgence</span>
+                                    {% elif meeting.meeting_type == 'formation' %}
+                                        <span class="badge bg-info">Formation</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ meeting.meeting_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ meeting.attendees_count }}</span>
+                                    <small class="text-muted">présents</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ meeting.agenda[:50] }}{% if meeting.agenda and meeting.agenda|length > 50 %}...{% endif %}</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ meeting.decisions[:50] }}{% if meeting.decisions and meeting.decisions|length > 50 %}...{% endif %}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#meetingModal{{ meeting.id }}"
+                                                title="Voir détails">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        {% if current_user.role in ['admin', 'animateur'] or current_user in [group.get_president(), group.get_secretary()] %}
+                                        <a href="#" class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Modal pour les détails de réunion -->
+                            <div class="modal fade" id="meetingModal{{ meeting.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Détails de la réunion - {{ meeting.meeting_date.strftime('%d/%m/%Y') }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6>Informations générales</h6>
+                                                    <p><strong>Date:</strong> {{ meeting.meeting_date.strftime('%d/%m/%Y à %H:%M') }}</p>
+                                                    <p><strong>Type:</strong> 
+                                                        {% if meeting.meeting_type == 'regular' %}
+                                                            Réunion régulière
+                                                        {% elif meeting.meeting_type == 'emergency' %}
+                                                            Réunion d'urgence
+                                                        {% elif meeting.meeting_type == 'formation' %}
+                                                            Formation
+                                                        {% else %}
+                                                            {{ meeting.meeting_type }}
+                                                        {% endif %}
+                                                    </p>
+                                                    <p><strong>Participants:</strong> {{ meeting.attendees_count }} membres</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6>Ordre du jour</h6>
+                                                    <p>{{ meeting.agenda or 'Aucun ordre du jour spécifié' }}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <hr>
+                                            
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <h6>Décisions prises</h6>
+                                                    <p>{{ meeting.decisions or 'Aucune décision enregistrée' }}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <hr>
+                                            
+                                            <div class="text-muted">
+                                                <small>Réunion créée le {{ meeting.created_at.strftime('%d/%m/%Y à %H:%M') }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                            <a href="{{ url_for('avec.group_shares', group_id=group.id) }}" class="btn btn-primary">Gérer les parts</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar fa-3x text-muted"></i>
+                    <h5 class="text-muted mt-3">Aucune réunion</h5>
+                    <p class="text-muted">Aucune réunion n'a été enregistrée pour ce groupe.</p>
+                    {% if current_user.role in ['admin', 'animateur'] or current_user in [group.get_president(), group.get_secretary()] %}
+                    <a href="{{ url_for('avec.create_meeting', group_id=group.id) }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Créer une réunion
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques des réunions -->
+{% if meetings %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-graph-up"></i> Statistiques des Réunions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="border rounded p-3">
+                            <h4 class="text-primary">{{ meetings|length }}</h4>
+                            <small class="text-muted">Total réunions</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="border rounded p-3">
+                            <h4 class="text-success">{{ meetings|selectattr('meeting_type', 'equalto', 'regular')|list|length }}</h4>
+                            <small class="text-muted">Réunions régulières</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="border rounded p-3">
+                            <h4 class="text-info">{{ meetings|selectattr('meeting_type', 'equalto', 'formation')|list|length }}</h4>
+                            <small class="text-muted">Sessions de formation</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="border rounded p-3">
+                            <h4 class="text-warning">{{ meetings|selectattr('meeting_type', 'equalto', 'emergency')|list|length }}</h4>
+                            <small class="text-muted">Réunions d'urgence</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %} 
